@@ -1,3 +1,7 @@
+ifndef VERSION
+	VERSION := latest
+endif
+
 .PHONY: certs docker-build
 
 certs:
@@ -6,5 +10,5 @@ certs:
 docker-build:
 	docker build \
 		-f docker/Dockerfile \
-		-t rust-websvc:latest \
+		-t rust-websvc:$(VERSION) \
 		. --rm

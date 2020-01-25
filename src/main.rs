@@ -69,7 +69,7 @@ async fn main() -> std::io::Result<()> {
 
     let (sigterm_sender, sigterm_receiver) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
-        let signals = signal_hook::iterator::Signals::new(&[signal_hook::SIGTERM]).unwrap();
+        let signals = signal_hook::iterator::Signals::new(&[signal_hook::SIGINT, signal_hook::SIGTERM]).unwrap();
         for sig in signals.forever() {
             println!("Signal encountered: {:?}", sig);
             let _ = sigterm_sender.send(sig);

@@ -1,0 +1,22 @@
+name: Build & Tag
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-tag:
+    name: "Build Backend: Log"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Tag
+      id: tag
+      uses: anothrNick/github-tag-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: false
+        RELEASE_BRANCHES: master
+        DEFAULT_BUMP: patch
+    - name: Build docker image
+      run: VERSION=${{ steps.tag.outputs.tag }} make docker-build
