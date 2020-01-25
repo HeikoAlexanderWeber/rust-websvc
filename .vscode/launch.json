@@ -1,0 +1,33 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'rust-websvc'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rust-websvc",
+                    "--package=rust-websvc"
+                ],
+                "filter": {
+                    "name": "rust-websvc",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "env": {
+                "SVC_KEY_FILE": "./res/certs/server.key",
+                "SVC_CERT_FILE": "./res/certs/server.crt",
+                "SVC_BIND_ADDRESS": "0.0.0.0:8080",
+                "SVC_NUM_WORKERS": "4",
+                "SVC_SHUTDOWN_TIMEOUT": "10",
+            },
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
