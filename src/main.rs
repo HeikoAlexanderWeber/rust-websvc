@@ -1,37 +1,42 @@
 use actix_web::{middleware, web, App, HttpRequest, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use std::sync::{Arc, Mutex};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct Data {
     id: String,
 }
 
 struct DataService {
+    items: Vec<Data>
 }
+
 impl DataService {
     fn new() -> Self{
-        DataService{}
-    }
-
-    fn get(&self) -> Data {
-        Data {
-            id: "bananarama".to_owned(),
+        DataService {
+            items: vec!(),
         }
     }
-    fn post(&self, d: &Data) {
+
+    fn get(&self) -> Vec<Data> {
+        self.items.clone()
+    }
+
+    fn post(&mut self, d: Data) {
         println!("{:?}", d);
+        self.items.push(d);
     }
 }
 
-async fn get(svc: web::Data<DataService>, req: HttpRequest) -> impl actix_web::Responder {
+async fn get(svc: web::Data<Arc<Mutex<DataService>>>, req: HttpRequest) -> impl actix_web::Responder {
     println!("{:?}", req);
-    HttpResponse::Ok().json(svc.get())
+    HttpResponse::Ok().json(svc.lock().unwrap().get())
 }
 
-async fn post(svc: web::Data<DataService>, data: web::Json<Data>, req: HttpRequest) -> impl actix_web::Responder {
+async fn post(svc: web::Data<Arc<Mutex<DataService>>>, data: web::Json<Data>, req: HttpRequest) -> impl actix_web::Responder {
     println!("{:?}", req);
-    svc.post(&data);
+    svc.lock().unwrap().post(data.into_inner());
     HttpResponse::Ok()
 }
 
@@ -52,14 +57,14 @@ async fn main() -> std::io::Result<()> {
 
     let (srv_sender, srv_receiver) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
+        let datasvc = Arc::new(Mutex::new(DataService::new()));
         let sys = actix_rt::System::new("https-server");
-        let srv = HttpServer::new(|| {
-            let svc = DataService::new();
+        let srv = HttpServer::new(move || {
             App::new()
                 // enable logger
                 .wrap(middleware::Logger::default())
                 .data(web::JsonConfig::default().limit(4096)) // <- limit size of the payload (global configuration)
-                .data(svc)
+                .data(datasvc.clone())
                 .service(web::resource("/data")
                     .route(web::post().to(post))
                     .route(web::get().to(get)))
