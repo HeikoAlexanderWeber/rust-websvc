@@ -67,7 +67,19 @@ async fn main() -> std::io::Result<()> {
         sys.run()
     });
 
+    let (sigterm_sender, sigterm_receiver) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let signals = signal_hook::iterator::Signals::new(&[signal_hook::SIGTERM]).unwrap();
+        for sig in signals.forever() {
+            println!("Signal encountered: {:?}", sig);
+            let _ = sigterm_sender.send(sig);
+        }
+    });
+
     let srv = srv_receiver.recv().unwrap();
+    let _ = sigterm_receiver.recv().unwrap();
+    println!("Termination signal received. Gracefully shutting down HTTP server.");
+    let _ = srv.stop(true);
     let _ = srv.await;
 
     Ok(())
