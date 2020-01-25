@@ -8,8 +8,8 @@ services:
             dockerfile: docker/Dockerfile
         restart: unless-stopped
         environment:
-            SVC_KEY_FILE: "./res/certs/server.key"
-            SVC_CERT_FILE: "./res/certs/server.crt"
+            SVC_KEY_FILE: "/home/app/res/certs/server.key"
+            SVC_CERT_FILE: "/home/app/res/certs/server.crt"
             SVC_BIND_ADDRESS: "0.0.0.0:8080"
             SVC_NUM_WORKERS: 4
             SVC_SHUTDOWN_TIMEOUT: 10
