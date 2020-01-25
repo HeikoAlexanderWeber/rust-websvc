@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-tag:
-    name: "Build Backend: Log"
+    name: "Build and tag application"
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
