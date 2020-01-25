@@ -19,12 +19,20 @@ impl DataService {
             id: "bananarama".to_owned(),
         }
     }
+    fn post(&self, d: &Data) {
+        println!("{:?}", d);
+    }
 }
 
-/// This handler uses json extractor with limit
-async fn index(svc: web::Data<DataService>, req: HttpRequest) -> impl actix_web::Responder {
+async fn get(svc: web::Data<DataService>, req: HttpRequest) -> impl actix_web::Responder {
     println!("{:?}", req);
-    HttpResponse::Ok().json(svc.get()) // <- send json response
+    HttpResponse::Ok().json(svc.get())
+}
+
+async fn post(svc: web::Data<DataService>, data: web::Json<Data>, req: HttpRequest) -> impl actix_web::Responder {
+    println!("{:?}", req);
+    svc.post(&data);
+    HttpResponse::Ok()
 }
 
 #[actix_rt::main]
@@ -52,11 +60,9 @@ async fn main() -> std::io::Result<()> {
                 .wrap(middleware::Logger::default())
                 .data(web::JsonConfig::default().limit(4096)) // <- limit size of the payload (global configuration)
                 .data(svc)
-                .service(
-                    web::resource("/data")
-                        .data(web::JsonConfig::default().limit(1024)) // <- limit size of the payload (resource level)
-                        .route(web::get().to(index)),
-                )
+                .service(web::resource("/data")
+                    .route(web::post().to(post))
+                    .route(web::get().to(get)))
         })
         .workers(num_workers)
         .shutdown_timeout(shutdown_timeout)
